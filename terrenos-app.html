@@ -149,7 +149,7 @@
         </div>
 
         <div class="mb-5">
-          <label class="block font-medium mb-1.5 text-sm">Precio (USD)</label>
+          <label class="block font-medium mb-1.5 text-sm">Precio (CLP)</label>
           <div class="flex gap-2">
             <input type="number" id="minPrice" placeholder="Mín" class="w-1/2 border rounded-lg px-3 py-3">
             <input type="number" id="maxPrice" placeholder="Máx" class="w-1/2 border rounded-lg px-3 py-3">
@@ -286,7 +286,7 @@
       <form onsubmit="publishListing(event)" class="space-y-3">
         <input type="text" placeholder="Título" required class="w-full border rounded-lg px-4 py-3.5">
         <input type="text" placeholder="Ubicación (ciudad, provincia)" required class="w-full border rounded-lg px-4 py-3.5">
-        <input type="number" placeholder="Precio USD" required class="w-full border rounded-lg px-4 py-3.5">
+        <input type="number" placeholder="Precio CLP" required class="w-full border rounded-lg px-4 py-3.5">
         <input type="text" placeholder="Superficie (ej: 2.5 ha)" required class="w-full border rounded-lg px-4 py-3.5">
         <select class="w-full border rounded-lg px-4 py-3.5">
           <option>Terreno</option>
@@ -301,14 +301,14 @@
 
 <script>
 const listings = [
-  { id: 1, title: "Campo agrícola fértil 12 ha", location: "Pergamino, Buenos Aires", scope: "nacional", category: "terreno", type: "Terreno Agrícola", price: 180000, size: "12 ha", sizeValue: 12, image: "campo-verde.jpg", features: ["Suelo fértil", "Alta plusvalía", "Cerca de ruta"], matchBase: 92, description: "Excelente tierra negra, ideal para cultivos de alto rendimiento. Acceso a ruta provincial, servicios cercanos.", lat: -33.889, lng: -60.574 },
-  { id: 2, title: "Lote residencial en desarrollo", location: "Pilar, Buenos Aires", scope: "local", category: "terreno", type: "Terreno Urbano", price: 65000, size: "800 m²", sizeValue: 0.08, image: "lote-residencial.jpg", features: ["Servicios completos", "Zona en crecimiento", "Alta plusvalía"], matchBase: 88, description: "Lote en barrio cerrado en expansión. Luz, agua, gas y cloacas.", lat: -34.458, lng: -58.914 },
-  { id: 3, title: "Casa moderna con gran terreno", location: "Escobar, Buenos Aires", scope: "local", category: "propiedad", type: "Casa Residencial", price: 320000, size: "1200 m²", sizeValue: 0.12, image: "casa-moderna.jpg", features: ["Servicios completos", "Zona en crecimiento", "Casa incluida", "Alta plusvalía"], matchBase: 90, description: "Casa moderna de diseño contemporáneo con amplio jardín.", lat: -34.348, lng: -58.795 },
-  { id: 4, title: "Propiedad rural con casa y piscina", location: "Córdoba Capital, Córdoba", scope: "nacional", category: "propiedad", type: "Propiedad Rural", price: 450000, size: "8 ha", sizeValue: 8, image: "propiedad-rural.jpg", features: ["Suelo fértil", "Potencial turístico", "Casa incluida", "Piscina", "Alta plusvalía"], matchBase: 87, description: "Hermosa propiedad rural con casa principal, dependencias y piscina.", lat: -31.420, lng: -64.189 },
-  { id: 5, title: "Casa familiar con jardín", location: "La Plata, Buenos Aires", scope: "local", category: "propiedad", type: "Casa Residencial", price: 185000, size: "600 m²", sizeValue: 0.06, image: "casa-familiar.jpg", features: ["Servicios completos", "Casa incluida"], matchBase: 82, description: "Casa familiar tradicional con hermoso jardín.", lat: -34.921, lng: -57.954 },
-  { id: 6, title: "Terreno turístico con vista", location: "San Martín de los Andes, Neuquén", scope: "nacional", category: "terreno", type: "Recreativo / Turístico", price: 220000, size: "1.2 ha", sizeValue: 1.2, image: "campo-verde.jpg", features: ["Potencial turístico", "Alta plusvalía"], matchBase: 85, description: "Terreno con vistas a la cordillera. Perfecto para cabañas.", lat: -40.157, lng: -71.353 },
-  { id: 7, title: "Campo mixto 25 ha", location: "Río Cuarto, Córdoba", scope: "nacional", category: "terreno", type: "Terreno Rural / Campo", price: 320000, size: "25 ha", sizeValue: 25, image: "campo-verde.jpg", features: ["Suelo fértil", "Cerca de ruta"], matchBase: 79, description: "Campo mixto agrícola-ganadero.", lat: -33.123, lng: -64.349 },
-  { id: 8, title: "Lote industrial cerca de autopista", location: "Escobar, Buenos Aires", scope: "local", category: "terreno", type: "Industrial", price: 95000, size: "1500 m²", sizeValue: 0.15, image: "lote-residencial.jpg", features: ["Cerca de ruta", "Zona en crecimiento", "Servicios completos"], matchBase: 81, description: "Ideal para depósito o desarrollo industrial.", lat: -34.355, lng: -58.802 }
+  { id: 1, title: "Campo agrícola fértil 12 ha", location: "Talca, Maule", scope: "nacional", category: "terreno", type: "Terreno Agrícola", price: 171000000, size: "12 ha", sizeValue: 12, image: "campo-verde.jpg", features: ["Suelo fértil", "Alta plusvalía", "Cerca de ruta"], matchBase: 92, description: "Excelente tierra para cultivos. Acceso a ruta y servicios cercanos en la zona central.", lat: -35.426, lng: -71.655 },
+  { id: 2, title: "Lote residencial en desarrollo", location: "Colina, Santiago", scope: "local", category: "terreno", type: "Terreno Urbano", price: 61750000, size: "800 m²", sizeValue: 0.08, image: "lote-residencial.jpg", features: ["Servicios completos", "Zona en crecimiento", "Alta plusvalía"], matchBase: 88, description: "Lote en zona de expansión residencial. Luz, agua y alcantarillado.", lat: -33.204, lng: -70.675 },
+  { id: 3, title: "Casa moderna con gran terreno", location: "Las Condes, Santiago", scope: "local", category: "propiedad", type: "Casa Residencial", price: 304000000, size: "1200 m²", sizeValue: 0.12, image: "casa-moderna.jpg", features: ["Servicios completos", "Zona en crecimiento", "Casa incluida", "Alta plusvalía"], matchBase: 90, description: "Casa moderna con amplio jardín en sector consolidado del oriente de Santiago.", lat: -33.417, lng: -70.583 },
+  { id: 4, title: "Propiedad rural con casa y piscina", location: "Puerto Varas, Los Lagos", scope: "nacional", category: "propiedad", type: "Propiedad Rural", price: 427500000, size: "8 ha", sizeValue: 8, image: "propiedad-rural.jpg", features: ["Suelo fértil", "Potencial turístico", "Casa incluida", "Piscina", "Alta plusvalía"], matchBase: 87, description: "Hermosa propiedad rural cerca del lago, con casa, dependencias y piscina. Ideal para turismo.", lat: -41.319, lng: -72.985 },
+  { id: 5, title: "Casa familiar con jardín", location: "Ñuñoa, Santiago", scope: "local", category: "propiedad", type: "Casa Residencial", price: 175750000, size: "600 m²", sizeValue: 0.06, image: "casa-familiar.jpg", features: ["Servicios completos", "Casa incluida"], matchBase: 82, description: "Casa familiar tradicional con jardín en barrio residencial.", lat: -33.456, lng: -70.598 },
+  { id: 6, title: "Terreno turístico con vista", location: "Pucón, La Araucanía", scope: "nacional", category: "terreno", type: "Recreativo / Turístico", price: 209000000, size: "1.2 ha", sizeValue: 1.2, image: "campo-verde.jpg", features: ["Potencial turístico", "Alta plusvalía"], matchBase: 85, description: "Terreno con vistas al volcán y al lago. Perfecto para cabañas o proyecto turístico.", lat: -39.272, lng: -71.977 },
+  { id: 7, title: "Campo mixto 25 ha", location: "Chillán, Ñuble", scope: "nacional", category: "terreno", type: "Terreno Rural / Campo", price: 304000000, size: "25 ha", sizeValue: 25, image: "campo-verde.jpg", features: ["Suelo fértil", "Cerca de ruta"], matchBase: 79, description: "Campo mixto agrícola-ganadero en la zona centro-sur.", lat: -36.606, lng: -72.103 },
+  { id: 8, title: "Lote industrial cerca de autopista", location: "San Bernardo, Santiago", scope: "local", category: "terreno", type: "Industrial", price: 90250000, size: "1500 m²", sizeValue: 0.15, image: "lote-residencial.jpg", features: ["Cerca de ruta", "Zona en crecimiento", "Servicios completos"], matchBase: 81, description: "Ideal para depósito o desarrollo industrial. Buen acceso a autopista.", lat: -33.592, lng: -70.700 }
 ];
 
 let currentScope = 'local';
@@ -319,7 +319,7 @@ let map;
 let markersLayer;
 
 function initMap() {
-  map = L.map('map').setView([-34.6, -58.4], 6);
+  map = L.map('map').setView([-33.45, -70.66], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
@@ -336,7 +336,7 @@ function updateMapMarkers(data) {
     marker.bindPopup(`
       <div class="text-sm">
         <strong>${l.title}</strong><br>
-        USD ${l.price.toLocaleString()} · ${l.size}<br>
+        CLP ${l.price.toLocaleString()} · ${l.size}<br>
         <span class="text-teal-600 font-medium">${match}% Match</span><br>
         <button onclick="showDetail(${l.id})" class="mt-1 text-xs bg-teal-600 text-white px-2 py-1 rounded">Ver</button>
       </div>
@@ -406,7 +406,7 @@ function renderListings(data) {
         <div class="p-4">
           <h3 class="font-bold text-lg mb-1">${l.title}</h3>
           <p class="text-gray-500 text-sm mb-2"><i class="fas fa-map-marker-alt text-teal-600"></i> ${l.location}</p>
-          <p class="text-2xl font-bold text-teal-700 mb-1">USD ${l.price.toLocaleString()}</p>
+          <p class="text-2xl font-bold text-teal-700 mb-1">CLP ${l.price.toLocaleString()}</p>
           <p class="text-sm text-gray-600 mb-3">${l.size} · ${l.type}</p>
           <div class="flex flex-wrap gap-1.5 mb-4">
             ${l.features.slice(0, 4).map(f => `<span class="text-xs bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full">${f}</span>`).join('')}
@@ -485,7 +485,7 @@ function showDetail(id) {
     <img src="${l.image}" class="w-full h-56 object-cover rounded-xl mb-4">
     <h2 class="text-xl font-bold mb-1">${l.title}</h2>
     <p class="text-teal-600 font-medium mb-2">${match}% Match</p>
-    <p class="text-xl font-bold mb-2">USD ${l.price.toLocaleString()} · ${l.size}</p>
+    <p class="text-xl font-bold mb-2">CLP ${l.price.toLocaleString()} · ${l.size}</p>
     <p class="mb-3 text-gray-700">${l.description}</p>
     <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt"></i> ${l.location} · ${l.type}</p>
     <button onclick="connect(${l.id})" class="w-full bg-teal-600 text-white py-3.5 rounded-xl font-bold">Conectar con el vendedor</button>
