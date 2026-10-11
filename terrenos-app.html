@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TerrenoMatch - Terrenos y Propiedades</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+    body { font-family: 'Inter', sans-serif; padding-bottom: 70px; }
+    .font-display { font-family: 'Playfair Display', serif; }
+    .gradient-hero { background: linear-gradient(135deg, #0f766e 0%, #115e59 50%, #134e4a 100%); }
+    .card-hover { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card-hover:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 16px 32px rgba(0,0,0,0.15); }
+    .match-badge { background: linear-gradient(90deg, #10b981, #059669); animation: pulse-badge 2s infinite; }
+    .filter-chip { transition: all 0.25s ease; min-height: 36px; }
+    .filter-chip.active { background: #0f766e; color: white; border-color: #0f766e; transform: scale(1.05); }
+    .bottom-nav { box-shadow: 0 -2px 10px rgba(0,0,0,0.08); }
+    .filter-panel { transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+    input, select, button { font-size: 16px !important; }
+    #map { height: 380px; border-radius: 1rem; z-index: 1; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+    .listing-card { opacity: 0; }
+    .listing-card.visible { animation: fadeInUp 0.5s ease-out forwards; }
+    button { transition: all 0.2s ease; }
+    button:active { transform: scale(0.97); }
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.25rem !important; line-height: 1.2; }
+      .hero-sub { font-size: 1.05rem !important; }
+      #map { height: 320px; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Navbar superior compacta -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex justify-between items-center">
+      <div class="flex items-center">
+        <i class="fas fa-home text-teal-600 text-xl mr-2"></i>
+        <span class="font-display text-xl font-bold text-teal-700">TerrenoMatch</span>
+      </div>
+      <button onclick="openSellModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium active:bg-teal-700">
+        <i class="fas fa-plus mr-1"></i> Publicar
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero optimizado para móvil -->
+  <section class="gradient-hero text-white py-12 px-4">
+    <div class="max-w-5xl mx-auto text-center animate-fadeInUp">
+      <h1 class="font-display hero-title text-4xl font-bold mb-3">Terrenos y Propiedades<br>con Match inteligente</h1>
+      <p class="hero-sub text-lg mb-6 opacity-90">Compra y vende local y nacional. Búsqueda única y conexión directa.</p>
+      
+      <div class="bg-white rounded-2xl p-4 shadow-2xl text-gray-800">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium mb-1 text-left">Alcance</label>
+            <div class="flex rounded-lg overflow-hidden border">
+              <button id="btnLocal" class="flex-1 py-3.5 bg-teal-600 text-white font-medium text-base" onclick="setScope('local')">Local</button>
+              <button id="btnNacional" class="flex-1 py-3.5 bg-gray-100 text-gray-700 font-medium text-base" onclick="setScope('nacional')">Nacional</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-left">Ubicación</label>
+            <input type="text" id="searchLocation" placeholder="Ciudad, provincia o 'mi zona'" class="w-full border rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-left">Tipo</label>
+            <select id="searchType" class="w-full border rounded-lg px-4 py-3.5 focus:ring-2 focus:ring-teal-500">
+              <option value="">Todos</option>
+              <option>Terreno Urbano</option>
+              <option>Terreno Rural / Campo</option>
+              <option>Terreno Agrícola</option>
+              <option>Casa Residencial</option>
+              <option>Propiedad Rural</option>
+              <option>Industrial</option>
+              <option>Recreativo / Turístico</option>
+            </select>
+          </div>
+          <button onclick="performSearch()" class="w-full bg-teal-600 text-white py-4 rounded-xl font-bold text-lg active:bg-teal-700">
+            <i class="fas fa-search mr-2"></i> Buscar con Match
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features compactos -->
+  <section class="bg-teal-50 py-6 px-4">
+    <div class="grid grid-cols-2 gap-4 text-center text-sm">
+      <div class="bg-white rounded-xl p-3 shadow-sm animate-fadeInUp" style="animation-delay: 0.1s">
+        <i class="fas fa-brain text-2xl text-teal-600 mb-1"></i>
+        <h3 class="font-bold">Match Inteligente</h3>
+      </div>
+      <div class="bg-white rounded-xl p-3 shadow-sm animate-fadeInUp" style="animation-delay: 0.2s">
+        <i class="fas fa-seedling text-2xl text-teal-600 mb-1"></i>
+        <h3 class="font-bold">Filtros Únicos</h3>
+      </div>
+      <div class="bg-white rounded-xl p-3 shadow-sm animate-fadeInUp" style="animation-delay: 0.3s">
+        <i class="fas fa-comments text-2xl text-teal-600 mb-1"></i>
+        <h3 class="font-bold">Conexión Directa</h3>
+      </div>
+      <div class="bg-white rounded-xl p-3 shadow-sm animate-fadeInUp" style="animation-delay: 0.4s">
+        <i class="fas fa-chart-line text-2xl text-teal-600 mb-1"></i>
+        <h3 class="font-bold">Potencial Real</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mapa Interactivo -->
+  <section class="max-w-7xl mx-auto px-4 py-4">
+    <h2 class="text-xl font-bold mb-3 text-teal-800">Mapa de Oportunidades</h2>
+    <div id="map" class="w-full"></div>
+    <p class="text-xs text-gray-500 mt-2 text-center">Toca los marcadores para ver detalles. Se actualiza con tus filtros.</p>
+  </section>
+
+  <!-- Listings + Filtros -->
+  <section id="buscar" class="max-w-7xl mx-auto px-4 py-6">
+    <button onclick="toggleFilters()" class="lg:hidden w-full bg-white border border-teal-600 text-teal-700 py-3 rounded-xl font-medium mb-4 flex items-center justify-center gap-2 active:bg-teal-50">
+      <i class="fas fa-sliders-h"></i> Filtros avanzados
+    </button>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+      <aside id="filterSidebar" class="filter-panel lg:w-80 bg-white rounded-2xl shadow p-5 h-fit lg:sticky lg:top-20 max-h-0 lg:max-h-none overflow-hidden lg:overflow-visible">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold text-lg text-teal-700">Filtros Avanzados</h2>
+          <button onclick="toggleFilters()" class="lg:hidden text-gray-500"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="mb-5">
+          <label class="block font-medium mb-1.5 text-sm">Categoría</label>
+          <select id="categoryFilter" class="w-full border rounded-lg px-3 py-3">
+            <option value="">Terrenos y Propiedades</option>
+            <option value="terreno">Solo Terrenos</option>
+            <option value="propiedad">Solo Propiedades</option>
+          </select>
+        </div>
+
+        <div class="mb-5">
+          <label class="block font-medium mb-1.5 text-sm">Precio (USD)</label>
+          <div class="flex gap-2">
+            <input type="number" id="minPrice" placeholder="Mín" class="w-1/2 border rounded-lg px-3 py-3">
+            <input type="number" id="maxPrice" placeholder="Máx" class="w-1/2 border rounded-lg px-3 py-3">
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <label class="block font-medium mb-1.5 text-sm">Superficie</label>
+          <select id="sizeFilter" class="w-full border rounded-lg px-3 py-3">
+            <option value="">Cualquiera</option>
+            <option value="small">Hasta 500 m²</option>
+            <option value="medium">500 m² - 1 ha</option>
+            <option value="large">1 - 10 ha</option>
+            <option value="xlarge">Más de 10 ha</option>
+          </select>
+        </div>
+
+        <div class="mb-5">
+          <label class="block font-medium mb-2 text-sm">Características Únicas</label>
+          <div class="flex flex-wrap gap-2">
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Suelo fértil</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Alta plusvalía</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Cerca de ruta</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Servicios completos</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Potencial turístico</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Zona en crecimiento</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Casa incluida</button>
+            <button class="filter-chip px-3 py-1.5 rounded-full border text-sm" onclick="toggleChip(this)">Piscina</button>
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <label class="block font-medium mb-1.5 text-sm">Tu propósito (Match)</label>
+          <select id="purpose" class="w-full border rounded-lg px-3 py-3">
+            <option>Inversión / Plusvalía</option>
+            <option>Vivienda familiar</option>
+            <option>Producción agrícola</option>
+            <option>Desarrollo inmobiliario</option>
+            <option>Recreación / Turismo</option>
+          </select>
+        </div>
+
+        <button onclick="applyFilters(); if(window.innerWidth < 1024) toggleFilters();" class="w-full bg-teal-600 text-white py-3.5 rounded-xl font-medium active:bg-teal-700">Aplicar Filtros</button>
+      </aside>
+
+      <main class="flex-1">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">Oportunidades <span id="resultCount" class="text-teal-600"></span></h2>
+          <select id="sortBy" onchange="sortListings()" class="border rounded-lg px-3 py-2 text-sm">
+            <option value="match">Mayor Match</option>
+            <option value="priceAsc">Precio ↓</option>
+            <option value="priceDesc">Precio ↑</option>
+            <option value="size">Mayor tamaño</option>
+          </select>
+        </div>
+        <div id="listingsGrid" class="grid grid-cols-1 gap-5"></div>
+      </main>
+    </div>
+  </section>
+
+  <!-- Alertas -->
+  <section id="alertas" class="bg-teal-700 text-white py-12 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="font-display text-2xl md:text-3xl font-bold mb-3">Llegamos a ti antes que nadie</h2>
+      <p class="mb-5 opacity-90">Recibe alertas cuando aparezca un terreno o propiedad que haga Match con tus criterios.</p>
+      <form onsubmit="subscribeAlerts(event)" class="space-y-3 max-w-md mx-auto">
+        <input type="email" required placeholder="Tu email" class="w-full px-4 py-3.5 rounded-xl text-gray-800">
+        <input type="tel" placeholder="WhatsApp (opcional)" class="w-full px-4 py-3.5 rounded-xl text-gray-800">
+        <button type="submit" class="w-full bg-white text-teal-700 font-bold py-3.5 rounded-xl active:bg-gray-100">Activar Alertas</button>
+      </form>
+      <p id="alertMsg" class="mt-4 font-medium"></p>
+    </div>
+  </section>
+
+  <!-- Historias -->
+  <section id="historias" class="py-12 px-4 bg-white">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="font-display text-2xl font-bold text-center mb-6 text-teal-800">Historias de Match exitoso</h2>
+      <div class="space-y-4">
+        <div class="bg-gray-50 p-5 rounded-2xl animate-fadeInUp">
+          <p class="italic mb-3">"Encontré un campo de 15 ha con suelo perfecto en 3 días gracias al Match. El vendedor me contactó directo."</p>
+          <p class="font-bold text-sm">— María, Córdoba</p>
+        </div>
+        <div class="bg-gray-50 p-5 rounded-2xl animate-fadeInUp" style="animation-delay: 0.1s">
+          <p class="italic mb-3">"Vendí mi casa con terreno en una semana. Las alertas trajeron compradores calificados."</p>
+          <p class="font-bold text-sm">— Carlos, Buenos Aires</p>
+        </div>
+        <div class="bg-gray-50 p-5 rounded-2xl animate-fadeInUp" style="animation-delay: 0.2s">
+          <p class="italic mb-3">"El filtro de potencial turístico me mostró una propiedad rural que nadie más tenía listada así."</p>
+          <p class="font-bold text-sm">— Sofía, Mendoza</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-6 text-center text-sm">
+    <p class="font-display text-lg mb-1">TerrenoMatch</p>
+    <p class="opacity-70">Compra y venta de terrenos y propiedades · Local y Nacional</p>
+  </footer>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-50 lg:hidden">
+    <a href="#buscar" class="flex flex-col items-center text-teal-700 text-xs py-1 px-3">
+      <i class="fas fa-search text-lg"></i>
+      <span>Buscar</span>
+    </a>
+    <a href="#map" class="flex flex-col items-center text-gray-600 text-xs py-1 px-3">
+      <i class="fas fa-map-marked-alt text-lg"></i>
+      <span>Mapa</span>
+    </a>
+    <button onclick="openSellModal()" class="flex flex-col items-center text-gray-600 text-xs py-1 px-3">
+      <i class="fas fa-plus-circle text-lg"></i>
+      <span>Publicar</span>
+    </button>
+    <a href="#alertas" class="flex flex-col items-center text-gray-600 text-xs py-1 px-3">
+      <i class="fas fa-bell text-lg"></i>
+      <span>Alertas</span>
+    </a>
+  </nav>
+
+  <!-- Modal Detalle -->
+  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-end sm:items-center justify-center z-50">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto p-5 animate-fadeInUp">
+      <div id="modalContent"></div>
+      <button onclick="closeModal()" class="mt-4 w-full border py-3.5 rounded-xl font-medium">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal Vender -->
+  <div id="sellModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-end sm:items-center justify-center z-50">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto p-5 animate-fadeInUp">
+      <h2 class="text-xl font-bold mb-4 text-teal-700">Publicar terreno o propiedad</h2>
+      <form onsubmit="publishListing(event)" class="space-y-3">
+        <input type="text" placeholder="Título" required class="w-full border rounded-lg px-4 py-3.5">
+        <input type="text" placeholder="Ubicación (ciudad, provincia)" required class="w-full border rounded-lg px-4 py-3.5">
+        <input type="number" placeholder="Precio USD" required class="w-full border rounded-lg px-4 py-3.5">
+        <input type="text" placeholder="Superficie (ej: 2.5 ha)" required class="w-full border rounded-lg px-4 py-3.5">
+        <select class="w-full border rounded-lg px-4 py-3.5">
+          <option>Terreno</option>
+          <option>Propiedad / Casa</option>
+        </select>
+        <textarea placeholder="Descripción y características" class="w-full border rounded-lg px-4 py-3.5" rows="3"></textarea>
+        <button type="submit" class="w-full bg-teal-600 text-white py-3.5 rounded-xl font-bold active:bg-teal-700">Publicar (Demo)</button>
+      </form>
+      <button onclick="closeSellModal()" class="mt-3 w-full border py-3.5 rounded-xl">Cancelar</button>
+    </div>
+  </div>
+
+<script>
+const listings = [
+  { id: 1, title: "Campo agrícola fértil 12 ha", location: "Pergamino, Buenos Aires", scope: "nacional", category: "terreno", type: "Terreno Agrícola", price: 180000, size: "12 ha", sizeValue: 12, image: "campo-verde.jpg", features: ["Suelo fértil", "Alta plusvalía", "Cerca de ruta"], matchBase: 92, description: "Excelente tierra negra, ideal para cultivos de alto rendimiento. Acceso a ruta provincial, servicios cercanos.", lat: -33.889, lng: -60.574 },
+  { id: 2, title: "Lote residencial en desarrollo", location: "Pilar, Buenos Aires", scope: "local", category: "terreno", type: "Terreno Urbano", price: 65000, size: "800 m²", sizeValue: 0.08, image: "lote-residencial.jpg", features: ["Servicios completos", "Zona en crecimiento", "Alta plusvalía"], matchBase: 88, description: "Lote en barrio cerrado en expansión. Luz, agua, gas y cloacas.", lat: -34.458, lng: -58.914 },
+  { id: 3, title: "Casa moderna con gran terreno", location: "Escobar, Buenos Aires", scope: "local", category: "propiedad", type: "Casa Residencial", price: 320000, size: "1200 m²", sizeValue: 0.12, image: "casa-moderna.jpg", features: ["Servicios completos", "Zona en crecimiento", "Casa incluida", "Alta plusvalía"], matchBase: 90, description: "Casa moderna de diseño contemporáneo con amplio jardín.", lat: -34.348, lng: -58.795 },
+  { id: 4, title: "Propiedad rural con casa y piscina", location: "Córdoba Capital, Córdoba", scope: "nacional", category: "propiedad", type: "Propiedad Rural", price: 450000, size: "8 ha", sizeValue: 8, image: "propiedad-rural.jpg", features: ["Suelo fértil", "Potencial turístico", "Casa incluida", "Piscina", "Alta plusvalía"], matchBase: 87, description: "Hermosa propiedad rural con casa principal, dependencias y piscina.", lat: -31.420, lng: -64.189 },
+  { id: 5, title: "Casa familiar con jardín", location: "La Plata, Buenos Aires", scope: "local", category: "propiedad", type: "Casa Residencial", price: 185000, size: "600 m²", sizeValue: 0.06, image: "casa-familiar.jpg", features: ["Servicios completos", "Casa incluida"], matchBase: 82, description: "Casa familiar tradicional con hermoso jardín.", lat: -34.921, lng: -57.954 },
+  { id: 6, title: "Terreno turístico con vista", location: "San Martín de los Andes, Neuquén", scope: "nacional", category: "terreno", type: "Recreativo / Turístico", price: 220000, size: "1.2 ha", sizeValue: 1.2, image: "campo-verde.jpg", features: ["Potencial turístico", "Alta plusvalía"], matchBase: 85, description: "Terreno con vistas a la cordillera. Perfecto para cabañas.", lat: -40.157, lng: -71.353 },
+  { id: 7, title: "Campo mixto 25 ha", location: "Río Cuarto, Córdoba", scope: "nacional", category: "terreno", type: "Terreno Rural / Campo", price: 320000, size: "25 ha", sizeValue: 25, image: "campo-verde.jpg", features: ["Suelo fértil", "Cerca de ruta"], matchBase: 79, description: "Campo mixto agrícola-ganadero.", lat: -33.123, lng: -64.349 },
+  { id: 8, title: "Lote industrial cerca de autopista", location: "Escobar, Buenos Aires", scope: "local", category: "terreno", type: "Industrial", price: 95000, size: "1500 m²", sizeValue: 0.15, image: "lote-residencial.jpg", features: ["Cerca de ruta", "Zona en crecimiento", "Servicios completos"], matchBase: 81, description: "Ideal para depósito o desarrollo industrial.", lat: -34.355, lng: -58.802 }
+];
+
+let currentScope = 'local';
+let filtered = [...listings];
+let activeChips = [];
+let filtersOpen = false;
+let map;
+let markersLayer;
+
+function initMap() {
+  map = L.map('map').setView([-34.6, -58.4], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  updateMapMarkers(listings);
+}
+
+function updateMapMarkers(data) {
+  markersLayer.clearLayers();
+  data.forEach(l => {
+    if (!l.lat) return;
+    const match = calculateMatch(l);
+    const marker = L.marker([l.lat, l.lng]).addTo(markersLayer);
+    marker.bindPopup(`
+      <div class="text-sm">
+        <strong>${l.title}</strong><br>
+        USD ${l.price.toLocaleString()} · ${l.size}<br>
+        <span class="text-teal-600 font-medium">${match}% Match</span><br>
+        <button onclick="showDetail(${l.id})" class="mt-1 text-xs bg-teal-600 text-white px-2 py-1 rounded">Ver</button>
+      </div>
+    `);
+  });
+  if (data.length > 0 && data.some(l => l.lat)) {
+    const group = L.featureGroup(markersLayer.getLayers());
+    if (group.getBounds().isValid()) map.fitBounds(group.getBounds(), { padding: [30, 30] });
+  }
+}
+
+function toggleFilters() {
+  const sidebar = document.getElementById('filterSidebar');
+  filtersOpen = !filtersOpen;
+  if (filtersOpen) {
+    sidebar.style.maxHeight = sidebar.scrollHeight + 'px';
+    sidebar.classList.remove('max-h-0');
+  } else {
+    sidebar.style.maxHeight = '0px';
+    sidebar.classList.add('max-h-0');
+  }
+}
+
+function setScope(scope) {
+  currentScope = scope;
+  document.getElementById('btnLocal').className = scope === 'local' ? 'flex-1 py-3.5 bg-teal-600 text-white font-medium text-base' : 'flex-1 py-3.5 bg-gray-100 text-gray-700 font-medium text-base';
+  document.getElementById('btnNacional').className = scope === 'nacional' ? 'flex-1 py-3.5 bg-teal-600 text-white font-medium text-base' : 'flex-1 py-3.5 bg-gray-100 text-gray-700 font-medium text-base';
+}
+
+function toggleChip(btn) {
+  btn.classList.toggle('active');
+  const text = btn.textContent.trim();
+  if (activeChips.includes(text)) {
+    activeChips = activeChips.filter(c => c !== text);
+  } else {
+    activeChips.push(text);
+  }
+}
+
+function calculateMatch(listing) {
+  let match = listing.matchBase;
+  const purpose = document.getElementById('purpose').value;
+  if (purpose.includes('agrícola') && listing.type.includes('Agrícola')) match += 5;
+  if (purpose.includes('Vivienda') && (listing.type.includes('Residencial') || listing.type.includes('Casa'))) match += 5;
+  if (purpose.includes('turístico') && listing.type.includes('Turístico')) match += 6;
+  if (purpose.includes('Inversión') && listing.features.includes('Alta plusvalía')) match += 4;
+  return Math.min(99, match);
+}
+
+function renderListings(data) {
+  const grid = document.getElementById('listingsGrid');
+  document.getElementById('resultCount').textContent = `(${data.length})`;
+  if (data.length === 0) {
+    grid.innerHTML = '<p class="text-center text-gray-500 py-10">No hay resultados. Ajusta los filtros o activa alertas.</p>';
+    updateMapMarkers([]);
+    return;
+  }
+  grid.innerHTML = data.map((l, i) => {
+    const match = calculateMatch(l);
+    return `
+      <div class="listing-card bg-white rounded-2xl shadow overflow-hidden card-hover" style="animation-delay: ${i * 0.08}s">
+        <div class="relative">
+          <img src="${l.image}" alt="${l.title}" class="w-full h-52 object-cover">
+          <div class="absolute top-3 right-3 match-badge text-white px-3 py-1 rounded-full text-sm font-bold">${match}% Match</div>
+          <span class="absolute top-3 left-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded">${l.category === 'terreno' ? 'Terreno' : 'Propiedad'}</span>
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-lg mb-1">${l.title}</h3>
+          <p class="text-gray-500 text-sm mb-2"><i class="fas fa-map-marker-alt text-teal-600"></i> ${l.location}</p>
+          <p class="text-2xl font-bold text-teal-700 mb-1">USD ${l.price.toLocaleString()}</p>
+          <p class="text-sm text-gray-600 mb-3">${l.size} · ${l.type}</p>
+          <div class="flex flex-wrap gap-1.5 mb-4">
+            ${l.features.slice(0, 4).map(f => `<span class="text-xs bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full">${f}</span>`).join('')}
+          </div>
+          <div class="flex gap-2">
+            <button onclick="showDetail(${l.id})" class="flex-1 border border-teal-600 text-teal-600 py-3 rounded-xl font-medium active:bg-teal-50">Detalles</button>
+            <button onclick="connect(${l.id})" class="flex-1 bg-teal-600 text-white py-3 rounded-xl font-medium active:bg-teal-700">Conectar</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.listing-card').forEach(c => c.classList.add('visible'));
+  }, 50);
+
+  updateMapMarkers(data);
+}
+
+function performSearch() {
+  applyFilters();
+  document.getElementById('buscar').scrollIntoView({behavior: 'smooth'});
+}
+
+function applyFilters() {
+  const loc = document.getElementById('searchLocation').value.toLowerCase();
+  const type = document.getElementById('searchType').value;
+  const minP = parseInt(document.getElementById('minPrice').value) || 0;
+  const maxP = parseInt(document.getElementById('maxPrice').value) || Infinity;
+  const sizeF = document.getElementById('sizeFilter').value;
+  const cat = document.getElementById('categoryFilter').value;
+
+  filtered = listings.filter(l => {
+    if (currentScope === 'local' && l.scope !== 'local') return false;
+    if (cat && l.category !== cat) return false;
+    if (loc && !l.location.toLowerCase().includes(loc)) return false;
+    if (type && l.type !== type) return false;
+    if (l.price < minP || l.price > maxP) return false;
+    if (sizeF === 'small' && l.sizeValue > 0.05) return false;
+    if (sizeF === 'medium' && (l.sizeValue < 0.05 || l.sizeValue > 1)) return false;
+    if (sizeF === 'large' && (l.sizeValue < 1 || l.sizeValue > 10)) return false;
+    if (sizeF === 'xlarge' && l.sizeValue <= 10) return false;
+    if (activeChips.length && !activeChips.every(c => l.features.includes(c))) return false;
+    return true;
+  });
+
+  if (currentScope === 'nacional') {
+    filtered = listings.filter(l => {
+      if (cat && l.category !== cat) return false;
+      if (loc && !l.location.toLowerCase().includes(loc)) return false;
+      if (type && l.type !== type) return false;
+      if (l.price < minP || l.price > maxP) return false;
+      if (activeChips.length && !activeChips.every(c => l.features.includes(c))) return false;
+      return true;
+    });
+  }
+
+  sortListings();
+}
+
+function sortListings() {
+  const by = document.getElementById('sortBy').value;
+  let sorted = [...filtered];
+  if (by === 'match') sorted.sort((a,b) => calculateMatch(b) - calculateMatch(a));
+  if (by === 'priceAsc') sorted.sort((a,b) => a.price - b.price);
+  if (by === 'priceDesc') sorted.sort((a,b) => b.price - a.price);
+  if (by === 'size') sorted.sort((a,b) => b.sizeValue - a.sizeValue);
+  renderListings(sorted);
+}
+
+function showDetail(id) {
+  const l = listings.find(x => x.id === id);
+  const match = calculateMatch(l);
+  document.getElementById('modalContent').innerHTML = `
+    <img src="${l.image}" class="w-full h-56 object-cover rounded-xl mb-4">
+    <h2 class="text-xl font-bold mb-1">${l.title}</h2>
+    <p class="text-teal-600 font-medium mb-2">${match}% Match</p>
+    <p class="text-xl font-bold mb-2">USD ${l.price.toLocaleString()} · ${l.size}</p>
+    <p class="mb-3 text-gray-700">${l.description}</p>
+    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt"></i> ${l.location} · ${l.type}</p>
+    <button onclick="connect(${l.id})" class="w-full bg-teal-600 text-white py-3.5 rounded-xl font-bold">Conectar con el vendedor</button>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+  document.getElementById('detailModal').classList.add('flex');
+}
+
+function closeModal() {
+  document.getElementById('detailModal').classList.add('hidden');
+  document.getElementById('detailModal').classList.remove('flex');
+}
+
+function connect(id) {
+  alert('¡Conexión enviada! El vendedor recibirá tu interés. (Demo)');
+  closeModal();
+}
+
+function subscribeAlerts(e) {
+  e.preventDefault();
+  document.getElementById('alertMsg').textContent = '¡Alertas activadas! Te avisaremos de nuevos Match.';
+}
+
+function openSellModal() {
+  document.getElementById('sellModal').classList.remove('hidden');
+  document.getElementById('sellModal').classList.add('flex');
+}
+function closeSellModal() {
+  document.getElementById('sellModal').classList.add('hidden');
+  document.getElementById('sellModal').classList.remove('flex');
+}
+function publishListing(e) {
+  e.preventDefault();
+  alert('¡Publicado! Aparecerá en búsquedas y generará alertas. (Demo)');
+  closeSellModal();
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  renderListings(listings);
+});
+</script>
+</body>
+</html>
